@@ -1,0 +1,28 @@
+<!doctype html><html><body style="margin:0;background:#222"><canvas id="c" style="width:1500px;height:1000px"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { createDrift } from '../src/assets/driftModel.ts';
+import { skyEnvironment, surface } from '../src/assets/materials.ts';
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+r.setSize(1500, 1000, false); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+r.setScissorTest(true); r.autoClear = false;
+const Q = new URLSearchParams(location.search);
+const steer = Number(Q.get('steer') ?? 0.5);
+const views = [[[0.55, 0.2, 0.48], [0.0, 0.1, 0.62]], [[-0.55, 0.2, 0.42], [0.42, 0.42, 0.12]], [[0.62, 0.05, 0.0], [0.2, 0.06, 0.3]]];
+for (let si = 0; si < 3; si++) for (let vi = 0; vi < 2; vi++) {
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xc9d3da);
+  scene.environment = skyEnvironment(r); scene.environmentIntensity = 0.7;
+  scene.add(new THREE.HemisphereLight(0xeaf2ff, 0x6a5a48, 0.8));
+  const sun = new THREE.DirectionalLight(0xfff1dc, 2.4); sun.position.set(1.5, 3, 1.2); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -0.6, right: 0.6, top: 0.6, bottom: -0.6 }); scene.add(sun);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), surface('concrete', { color: 0x8c8f94, repeat: [8, 8] })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  const c = createDrift(); c.pose({ x: 0, z: 0, psi: 0, steer: si === 2 ? steer : 0, spinF: 0, spinR: 0, bodyRoll: 0, bodyPitch: 0 }); scene.add(c.root);
+  c.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const cam = new THREE.PerspectiveCamera(30, 750 / 333, 0.02, 20);
+  const [x, y, z] = views[si][vi]; cam.position.set(x, y, z); cam.lookAt(0, 0.045, 0);
+  const vx = vi * 750, vy = (2 - si) * 333;
+  r.setViewport(vx, vy, 750, 333); r.setScissor(vx, vy, 750, 333);
+  r.render(scene, cam);
+}
+window.done = true;
+</script></body></html>

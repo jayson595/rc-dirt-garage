@@ -1,0 +1,13 @@
+# dependencies and build output
+node_modules/
+dist/
+
+# logs and editor/OS clutter
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

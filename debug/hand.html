@@ -1,0 +1,29 @@
+<!doctype html><html><body style="margin:0;background:#888"><canvas id=c width=1200 height=800></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { Hand, skinMaterials } from '../src/assets/handModel.ts';
+import { createTransmitter } from '../src/assets/transmitterModel.ts';
+import { createCrawler } from '../src/assets/crawlerModel.ts';
+const r = new THREE.WebGLRenderer({canvas: document.getElementById('c'), antialias: true});
+r.setSize(1200, 800, false); r.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8a8f96);
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x3a3430, 1.3)); const k = new THREE.DirectionalLight(0xffffff, 1.8); k.position.set(-3,5,6); scene.add(k);
+const q = new URLSearchParams(location.search);
+const mode = q.get('m') || 'hand';
+let obj;
+if (mode === 'hand') {
+  const h = new Hand(q.get('side') || 'right', skinMaterials());
+  const c = (q.get('curl') || '0.2,0.25,0.15').split(',').map(Number);
+  for (let i=0;i<4;i++) h.setFinger(i, c, 0);
+  const t = (q.get('thumb') || '0.3,0.2,0.2').split(',').map(Number);
+  h.setThumb(t[0], [t[1], t[2]]);
+  h.setForearm(new THREE.Vector3(-1.6, 0, 0));
+  obj = h.group;
+} else if (mode === 'crawler') { const c = createCrawler(); obj = c.root; } else { const rig = createTransmitter(); rig.pose(+(q.get('s')||0), +(q.get('t')||0), 1, 0); obj = rig.root; }
+const holder = new THREE.Group(); holder.add(obj); scene.add(holder);
+holder.rotation.set(+(q.get('rx')||0), +(q.get('ry')||0), +(q.get('rz')||0));
+const z = +(q.get('z')||1.6);
+const cam = new THREE.OrthographicCamera(-z*1.5, z*1.5, z, -z, 0.1, 50);
+cam.position.set(+(q.get('cx')||0), +(q.get('cy')||0), 10); 
+r.render(scene, cam); window.done = true;
+</script></body></html>

@@ -1,0 +1,31 @@
+<!doctype html><html><body style="margin:0;background:#222"><canvas id="c" style="width:1500px;height:1250px"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { createBuggy } from '../src/assets/buggyModel.ts';
+import { skyEnvironment, surface } from '../src/assets/materials.ts';
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+r.setSize(1500, 1250, false); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+r.setScissorTest(true); r.autoClear = false;
+const Q = new URLSearchParams(location.search);
+const ids = (Q.get('ids') || 'buggy,buggy2wd,stadium,sct,truggy').split(',');
+const shellOff = Q.get('shell') === '0';
+const rows = ids.length, H = Math.floor(1250 / rows);
+for (let si = 0; si < rows; si++) for (let vi = 0; vi < 2; vi++) {
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xc9d3da);
+  scene.environment = skyEnvironment(r); scene.environmentIntensity = 0.7;
+  scene.add(new THREE.HemisphereLight(0xeaf2ff, 0x6a5a48, 0.8));
+  const sun = new THREE.DirectionalLight(0xfff1dc, 2.4); sun.position.set(1.5, 3, 1.2); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -0.6, right: 0.6, top: 0.6, bottom: -0.6 }); scene.add(sun);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), surface('dirt', { color: 0x8a7458, repeat: [8, 8] })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  const look = Q.get('look') ? JSON.parse(Q.get('look')) : undefined; const c = createBuggy(ids[si], look); if (shellOff) c.setShell(false); scene.add(c.root);
+  c.wheels[0].steer.rotation.y = -0.3; c.wheels[1].steer.rotation.y = -0.3;
+  c.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const cam = new THREE.PerspectiveCamera(30, 750 / H, 0.02, 20);
+  const zm = Number(Q.get('z') || 1); const views = [[0.75 * zm, 0.42 * zm, 0.8 * zm], [-0.85 * zm, 0.35 * zm, -0.55 * zm]];
+  const [x, y, z] = views[vi]; cam.position.set(x, y, z); cam.lookAt(0, 0.07, 0);
+  const vx = vi * 750, vy = (rows - 1 - si) * H;
+  r.setViewport(vx, vy, 750, H); r.setScissor(vx, vy, 750, H);
+  r.render(scene, cam);
+}
+window.done = true;
+</script></body></html>

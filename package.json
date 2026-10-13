@@ -1,0 +1,25 @@
+{
+  "name": "rc-dirt-garage",
+  "version": "1.0.0",
+  "description": "A mobile-first RC hobby simulator in the browser: build, tune and race RC buggies, crawlers, monster trucks and drift cars.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.169.0",
+    "typescript": "5.6.3",
+    "vite": "5.4.10",
+    "vite-plugin-singlefile": "2.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
